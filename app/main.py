@@ -1,24 +1,43 @@
 import os
 
+
 def move_file(command: str) -> None:
-    words_list = command.split()
-    if words_list[0] != "mv" or len(words_list) != 3:
-        return
-    source, destination = words_list[1], words_list[2]
-    if destination.endswith("/"):
-        destination = os.path.join(destination, os.path.basename(source))
-    dest_dir = os.path.dirname(destination)
-    if dest_dir:
-        current_path = ""
-        for folder in dest_dir.split("/"):
-            if current_path == "":
-                current_path = folder
-            else:
-                current_path = current_path + "/" + folder
-            if not os.path.exists(current_path):
-                os.mkdir(current_path)
-    with open(source, "r") as file:
-        content = file.read()
-    with open(destination, "w") as file:
-        file.write(content)
-    os.remove(source)
+    command_parts = command.split()
+
+    if len(command_parts) != 3 or command_parts[0] != "mv":
+        raise ValueError("Invalid command format.")
+
+    _, source_path, destination_path = command_parts
+
+    if destination_path.endswith("/"):
+        source_path_parts = source_path.split("/")
+        source_file_name = source_path_parts[-1]
+        destination_path = os.path.join(destination_path, source_file_name)
+
+    destination_path_parts = destination_path.split("/")
+    directory_parts = destination_path_parts[:-1]
+
+    current_directory_path = ""
+
+    for directory_name in directory_parts:
+        if not directory_name:
+            continue
+
+        if current_directory_path == "":
+            current_directory_path = directory_name
+        else:
+            current_directory_path = os.path.join(
+                current_directory_path,
+                directory_name
+            )
+
+        if not os.path.exists(current_directory_path):
+            os.mkdir(current_directory_path)
+
+    with open(source_path, "rb") as source_file_object:
+        source_file_data = source_file_object.read()
+
+    with open(destination_path, "wb") as destination_file_object:
+        destination_file_object.write(source_file_data)
+
+    os.remove(source_path)
